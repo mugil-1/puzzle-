@@ -299,7 +299,7 @@ function reset() {
 
 $('nameForm').onsubmit = e => {
   e.preventDefault();
-  saveScore(($('nameIn').value.trim() || 'ANON').toUpperCase(), elapsed);
+  saveScore(($('nameIn').value.trim() || 'MUGIL').toUpperCase(), elapsed);
   $('nameIn').value = ''; reset(); renderLb(); $('lb').style.display = 'flex';
 };
 $('lbBtn').onclick = () => { renderLb(); $('lb').style.display = 'flex'; };
