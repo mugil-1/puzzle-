@@ -5,48 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Live Puzzle</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous" onerror="window.__handsScriptError=true"></script>
 <style>
-  :root { --lime:#c6ff2e; --bg:#07060d; --panel:rgba(30,30,24,.82); }
+  :root {
+    --lime:#ff3b4f; --bg:#080a0d; --panel:rgba(17,22,24,.88);
+    --muted:#98a3a5; --line:rgba(255,59,79,.24); --glass:rgba(255,255,255,.055);
+  }
   * { box-sizing:border-box; margin:0; }
-  body { background:var(--bg); color:#fff; font-family:'JetBrains Mono',ui-monospace,monospace;
-         min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:28px 16px; }
-  h1 { color:var(--lime); font-size:22px; letter-spacing:.12em; text-transform:uppercase; }
-  .sub { color:#8d8d99; font-size:12px; margin:8px 0 22px; }
-  #stage { position:relative; width:min(1100px,100%); aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#111; }
+  body {
+    background:radial-gradient(ellipse at 50% -15%, #2b171c 0%, #0b1010 42%, var(--bg) 78%);
+    color:#f4f7f2; font-family:'JetBrains Mono',ui-monospace,monospace;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:34px 18px;
+  }
+  h1 { color:var(--lime); font-size:clamp(22px,3vw,30px); letter-spacing:.16em; text-transform:uppercase; text-shadow:0 0 24px #ff3b4f30; }
+  .sub { color:var(--muted); font-size:11px; letter-spacing:.04em; margin:9px 0 24px; text-align:center; }
+  #stage {
+    position:relative; width:min(1100px,100%); aspect-ratio:16/9; border-radius:18px;
+    overflow:hidden; background:#101517; border:1px solid rgba(255,59,79,.28);
+    box-shadow:0 24px 80px #0009, 0 0 35px #ff3b4f12;
+  }
   canvas { width:100%; height:100%; display:block; }
   video { display:none; }
-  .pill { position:absolute; background:var(--panel); border-radius:999px; font-size:11px; padding:7px 12px; color:#fff;
-          border:0; cursor:pointer; font-family:inherit; }
-  #lbBtn { top:14px; left:14px; }
-  #lbBtn b { color:var(--lime); margin-right:6px; }
-  #timer { top:14px; left:50%; transform:translateX(-50%); display:none; font-weight:700; }
-  #resetBtn { bottom:14px; left:14px; width:32px; height:32px; padding:0; font-size:15px; }
-  #hint { position:absolute; top:14px; right:14px; background:var(--panel); border-radius:8px; padding:10px 12px;
-          font-size:10px; line-height:1.7; text-align:right; max-width:230px; }
-  #hint .ph { color:var(--lime); font-weight:700; letter-spacing:.06em; margin-bottom:2px; }
-  #status { position:absolute; bottom:14px; right:14px; font-size:10px; color:#ffffffaa; }
-  #done { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.45); }
-  #done .card { text-align:center; background:rgba(15,15,12,.88); padding:26px 34px; border-radius:14px; min-width:280px; }
-  #done .big { color:var(--lime); font-size:22px; font-weight:700; letter-spacing:.1em; }
-  #done .time { font-size:26px; margin:8px 0 16px; }
-  #done form { display:flex; gap:8px; justify-content:center; }
-  #done input { background:#ffffff22; border:1px solid #ffffff33; color:#fff; padding:9px 12px; border-radius:6px;
-                font-family:inherit; width:170px; }
-  #done button, #lb button.close { background:var(--lime); color:#111; border:0; border-radius:6px; padding:9px 14px;
-                font-family:inherit; font-weight:700; cursor:pointer; }
-  #lb { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); }
-  #lb .card { background:rgba(15,15,12,.94); padding:22px 28px; border-radius:14px; min-width:300px; max-height:80%; overflow:auto; }
-  #lb h2 { color:var(--lime); font-size:14px; letter-spacing:.12em; margin-bottom:12px; }
-  #lb ol { padding-left:22px; font-size:13px; line-height:2; }
-  #lb ol span { float:right; margin-left:30px; color:var(--lime); }
-  #lb .close { margin-top:14px; }
-  #msg { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center;
-         background:#07060dee; font-size:13px; padding:30px; }
-
-         #sizes { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:6px; }
-#sizes .pill { position:static; }
-#sizes .pill.on { background:var(--lime); color:#111; font-weight:700; }
+  .pill {
+    position:absolute; background:rgba(8,13,14,.82); backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.13); border-radius:999px; font-size:10px;
+    padding:9px 14px; color:#f4f7f2; cursor:pointer; font-family:inherit;
+    letter-spacing:.06em; transition:background .2s,border-color .2s,transform .2s;
+  }
+  .pill:hover { border-color:var(--lime); background:#30171d; transform:translateY(-1px); }
+  #lbBtn { top:16px; left:16px; }
+  #lbBtn b { color:var(--lime); margin-right:7px; }
+  #timer { top:16px; left:50%; transform:translateX(-50%); display:none; font-weight:700; color:var(--lime); }
+  #resetBtn { bottom:16px; left:16px; width:36px; height:36px; padding:0; font-size:17px; }
+  #hint {
+    position:absolute; top:16px; right:16px; background:rgba(8,13,14,.82);
+    backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; padding:11px 14px; font-size:9px; line-height:1.85;
+    text-align:right; max-width:240px; color:#d5ddda;
+  }
+  #hint .ph { color:var(--lime); font-weight:700; letter-spacing:.1em; margin-bottom:3px; }
+  #status { position:absolute; bottom:20px; right:18px; font-size:9px; color:#ffffffb8; letter-spacing:.05em; }
+  #done, #lb {
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.68); backdrop-filter:blur(8px); padding:16px;
+  }
+  #done .card, #lb .card {
+    text-align:center; background:linear-gradient(145deg,rgba(23,31,27,.98),rgba(10,15,16,.98));
+    border:1px solid var(--line); box-shadow:0 20px 60px #0009;
+    padding:28px 30px; border-radius:18px; min-width:min(320px,100%);
+  }
+  #done .big { color:var(--lime); font-size:23px; font-weight:700; letter-spacing:.12em; }
+  #done .time { font-size:30px; margin:12px 0 7px; }
+  #done .saved { color:var(--muted); font-size:10px; margin-bottom:20px; }
+  #done button, #lb button {
+    background:var(--lime); color:#101510; border:0; border-radius:8px;
+    padding:10px 15px; font-family:inherit; font-size:10px; font-weight:700;
+    letter-spacing:.06em; cursor:pointer; transition:filter .2s,transform .2s;
+  }
+  #done button:hover, #lb button:hover { filter:brightness(1.08); transform:translateY(-1px); }
+  .score-form { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .score-form input {
+    width:190px; min-width:0; background:rgba(255,255,255,.07); color:#fff;
+    border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:10px 12px;
+    font:inherit; font-size:11px; outline:none;
+  }
+  .score-form input:focus { border-color:var(--lime); box-shadow:0 0 0 2px rgba(255,59,79,.16); }
+  .score-form input::placeholder { color:#899294; }
+  #lb .card { min-width:min(360px,100%); max-height:84%; overflow:auto; text-align:left; }
+  #lb h2 { color:var(--lime); font-size:14px; letter-spacing:.12em; margin-bottom:15px; text-align:center; }
+  #lb ol { padding-left:25px; font-size:11px; line-height:2.5; color:#e8eeea; }
+  #lb ol span { float:right; margin-left:25px; color:var(--lime); }
+  #lb .actions { display:flex; justify-content:center; gap:9px; margin-top:18px; }
+  #lb button.secondary { background:var(--glass); color:#eaf0eb; border:1px solid #ffffff26; }
+  #lb button.danger { background:#ff6262; color:#210909; }
+  #msg {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    text-align:center; background:#070a0dee; color:#dce6df; font-size:12px;
+    letter-spacing:.04em; padding:30px;
+  }
+  #sizes { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:7px; }
+  #sizes .pill { position:static; padding:8px 12px; }
+  #sizes .pill.on { background:var(--lime); color:#101510; border-color:var(--lime); font-weight:700; }
+  @media (max-width:600px) {
+    body { padding:22px 10px; }
+    #stage { border-radius:12px; }
+    #hint { top:58px; right:10px; padding:7px 9px; font-size:8px; max-width:175px; }
+    #lbBtn { top:10px; left:10px; }
+    #timer { top:12px; }
+    #resetBtn { bottom:10px; left:10px; }
+    #sizes { bottom:10px; }
+    #sizes .pill { padding:7px 9px; font-size:9px; }
+    #status { bottom:17px; right:10px; font-size:8px; }
+  }
 </style>
 </head>
 <body>
@@ -66,14 +117,21 @@
   <div id="sizes"></div>
 
   <div id="done"><div class="card">
-    <div class="big">COMPLETE!</div>
+    <div class="big">PUZZLE SOLVED!</div>
     <div class="time" id="doneTime">0:00</div>
-    <form id="nameForm"><input id="nameIn" maxlength="14" placeholder="YOUR NAME" autocomplete="off"><button>GO</button></form>
+    <div class="saved">ENTER PLAYER NAME TO SAVE YOUR SCORE</div>
+    <form id="scoreForm" class="score-form">
+      <input id="playerName" type="text" maxlength="16" value="MUGIL" placeholder="ENTER NAME" autocomplete="off" aria-label="Player name">
+      <button type="submit">SAVE SCORE</button>
+    </form>
   </div></div>
 
   <div id="lb"><div class="card">
     <h2 id="lbTitle">LEADERBOARD</h2><ol id="lbList"></ol>
-    <button class="close">CLOSE</button>
+    <div class="actions">
+      <button class="danger" id="eraseLbBtn">ERASE SCORES</button>
+      <button class="secondary close">CLOSE</button>
+    </div>
   </div></div>
 
   <div id="msg">Starting camera and hand tracking...</div>
@@ -107,6 +165,7 @@ function buildSizes() {
   });
 }
 
+let returnToCameraAfterLeaderboard = false;
 let phase = 'capture';           // capture | play | done
 let snap = null, grid = null;    // snapshot canvas, {x,y,w,h}
 let tiles = [];                  // tiles[pos] = original index
@@ -207,7 +266,7 @@ function captureStep(hands, infos) {
 
   if (ok && a.pinching && b.pinching) {
     capHold++;
-    ctx.fillStyle = 'rgba(198,255,46,' + Math.min(0.35, capHold / 20) + ')';
+    ctx.fillStyle = 'rgba(255,59,79,' + Math.min(0.35, capHold / 20) + ')';
     ctx.fillRect(r.x, r.y, r.w, r.h);
     if (capHold >= 6) startPuzzle(r);
   } else capHold = 0;
@@ -272,9 +331,13 @@ function drawPuzzle(hover = -1) {
 
 // ---------- finish, leaderboard, reset ----------
 function finish() {
+  if (phase === 'done') return;
   phase = 'done'; drag = null;
   $('doneTime').textContent = '\u23F1 ' + fmt(elapsed);
-  $('done').style.display = 'flex'; $('nameIn').focus();
+  $('playerName').value = 'MUGIL';
+  $('done').style.display = 'flex';
+  $('playerName').focus();
+  $('playerName').select();
   drawPuzzle();
 }
 
@@ -297,34 +360,131 @@ function reset() {
   setHint('capture');
 }
 
-$('nameForm').onsubmit = e => {
+$('scoreForm').onsubmit = e => {
   e.preventDefault();
-  saveScore(($('nameIn').value.trim() || 'MUGIL').toUpperCase(), elapsed);
-  $('nameIn').value = ''; reset(); renderLb(); $('lb').style.display = 'flex';
+  const playerName = $('playerName').value.trim().slice(0, 16) || 'MUGIL';
+  saveScore(playerName, elapsed);
+  $('done').style.display = 'none';
+  returnToCameraAfterLeaderboard = true;
+  renderLb();
+  $('lb').style.display = 'flex';
 };
 $('lbBtn').onclick = () => { renderLb(); $('lb').style.display = 'flex'; };
-$('lb').querySelector('.close').onclick = () => $('lb').style.display = 'none';
+$('lb').querySelector('.close').onclick = () => {
+  $('lb').style.display = 'none';
+  if (returnToCameraAfterLeaderboard) {
+    returnToCameraAfterLeaderboard = false;
+    reset(); // clear the completed puzzle and return to live camera capture
+  }
+};
+$('eraseLbBtn').onclick = () => {
+  if (!confirm('Erase all leaderboard scores for ' + N + 'x' + N + '? This cannot be undone.')) return;
+  try { localStorage.removeItem(key()); } catch {}
+  renderLb();
+};
 $('resetBtn').onclick = reset;
 
-// ---------- boot ----------
+// ---------- boot + clear diagnostics ----------
+function showStartupError(message) {
+  $('msg').style.display = 'flex';
+  $('msg').textContent = message;
+  $('status').textContent = 'STARTUP ERROR';
+  console.error(message);
+}
+
+function waitForVideo(timeoutMs = 12000) {
+  return new Promise((resolve, reject) => {
+    if (cam.readyState >= 2 && cam.videoWidth > 0) return resolve();
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('Camera connected, but no video frames arrived. Close other apps using the camera and try again.'));
+    }, timeoutMs);
+    const done = () => {
+      if (cam.videoWidth > 0) {
+        cleanup();
+        resolve();
+      }
+    };
+    const cleanup = () => {
+      clearTimeout(timer);
+      cam.removeEventListener('loadeddata', done);
+      cam.removeEventListener('playing', done);
+    };
+    cam.addEventListener('loadeddata', done);
+    cam.addEventListener('playing', done);
+  });
+}
+
 async function boot() {
   buildSizes();
   setHint('capture');
-  setHint('capture');
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, facingMode: 'user' }, audio: false });
-    cam.srcObject = stream; await cam.play();
-  } catch (e) {
-    $('msg').textContent = 'Camera blocked. Allow camera access and serve this page from localhost or https.'; return;
+
+  // Camera access requires a supported browser and a secure context.
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showStartupError('Camera API is unavailable. Open this game using http://localhost (recommended), not by double-clicking the HTML file. See the instructions below.');
+    return;
   }
-  const hands = new Hands({ locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f });
-  hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
-  hands.onResults(onResults);
-  const loop = async () => {
-    if (cam.readyState >= 2) { try { await hands.send({ image: cam }); } catch (e) { console.error(e); } }
-    requestAnimationFrame(loop);
-  };
-  loop();
+
+  try {
+    $('msg').textContent = 'Requesting camera access...';
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+      audio: false
+    });
+    cam.srcObject = stream;
+    cam.muted = true;
+    cam.playsInline = true;
+    await cam.play();
+    await waitForVideo();
+  } catch (e) {
+    let reason = e && e.name ? e.name + ': ' + e.message : String(e);
+    if (e && e.name === 'NotAllowedError') {
+      reason = 'Camera permission was denied. Click the site icon beside the address bar, set Camera to Allow, then reload.';
+    } else if (e && (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError')) {
+      reason = 'No camera was found. Connect or enable a webcam, then reload.';
+    } else if (e && (e.name === 'NotReadableError' || e.name === 'TrackStartError')) {
+      reason = 'The camera is busy or blocked by another app. Close Camera, Teams, Zoom or other apps using it, then reload.';
+    }
+    showStartupError('CAMERA ERROR — ' + reason);
+    return;
+  }
+
+  try {
+    if (window.__handsScriptError || typeof Hands === 'undefined') {
+      throw new Error('MediaPipe Hands could not load. Check your internet connection or allow cdn.jsdelivr.net, then reload.');
+    }
+
+    $('msg').textContent = 'Camera ready. Loading hand tracking...';
+    const hands = new Hands({
+      locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f
+    });
+    hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.5
+    });
+    hands.onResults(onResults);
+    await hands.initialize();
+
+    $('msg').textContent = 'Hand tracking ready. Show both hands to the camera.';
+    const loop = async () => {
+      if (cam.readyState >= 2 && cam.videoWidth > 0) {
+        try {
+          await hands.send({ image: cam });
+        } catch (e) {
+          console.error('Hand tracking frame error:', e);
+          showStartupError('HAND TRACKING ERROR — ' + (e.message || e));
+          return;
+        }
+      }
+      requestAnimationFrame(loop);
+    };
+    loop();
+  } catch (e) {
+    showStartupError('HAND TRACKING COULD NOT START — ' + (e.message || e) +
+      ' Make sure the internet connection is active, then refresh the page.');
+  }
 }
 boot();
 </script>
